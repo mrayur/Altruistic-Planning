@@ -5,7 +5,7 @@ class Line():
     def __init__(self,*args):
         args = list(args)
         args.reverse()
-        self.coefs = [(x,i) for i,x in enumerate(args)]
+        self.coefs = [(x,i) for i,x in enumerate(args)] #输入6（5）个系数，返回带有序号的元组(系数1，次数1...)
 
 
     def dot(self,coefs=None):
@@ -13,15 +13,15 @@ class Line():
         else: coefs = list(coefs)
 
         for i in range(len(coefs)):
-            if coefs[i][1] == 0:
+            if coefs[i][1] == 0: #  [[el00,el01],[el10,el11],[el20,el21],[el30,el31],[el40,el41],[el50,el51]], ele[i]第二个元素为0，这个ele赋值[0,0]
                 coefs[i] = (0,0)
             else:
-                coefs[i] = (coefs[i][0]*coefs[i][1],coefs[i][1]-1)
+                coefs[i] = (coefs[i][0]*coefs[i][1],coefs[i][1]-1) #次数降一次，原系数乘以原次数
         return coefs
 
 
 class Trajectory():
-    def __init__(self,init_state,dest_state,time_len,label):
+    def __init__(self,init_state,dest_state,time_len,label=None):
         if init_state is None or dest_state is None:
             print("Error, default values for states are invalid")
             exit(-1)
@@ -175,7 +175,7 @@ class Trajectory():
     def completeActionList(self,axle_length,dt=.1):
         t = 0
         action_list = []
-        while round(t,2)<=self.traj_len_t:
+        while round(t,2)<=self.traj_len_t: #小数点后1位四舍五入
             action_list.append(self.action(round(t,2),axle_length))
             t += dt
 
@@ -191,7 +191,7 @@ def defineTrajectory(init_state,dest_state,T):
     #By relieving the constraint that initial velocity must be in the direction of lane we can generate trajectories that
     # Start partway through the intended manoeuvre
     init_v_x = init_state["velocity"]*math.cos(math.radians(init_heading))
-    init_v_y = init_state["velocity"]*math.sin(math.radians(init_heading)) 
+    init_v_y = init_state["velocity"]*math.sin(math.radians(init_heading))
     s_dot_0 = init_v_y
     d_dot_0 = init_v_x
     d_dot_dot_0,s_dot_dot_0 = init_state["parametrised_acceleration"]
@@ -224,66 +224,6 @@ def defineTrajectory(init_state,dest_state,T):
     ########################################################################
 
     return line_d,line_s
-
-
-#############################################################################################################
-#This is the specific case of the general derivation above. If the assumptions below are satisfied in the above
-# case it should generate the same trajectories
-def defineTrajectoryNonGeneral(init_state,dest_state,T):
-    #Assumptions
-    # Given: initial lateral and longitudinal (x,y) position; initial longitudinal velocity; final (lat,long) position,final longitudinal velocity
-    # Assume initial lateral velocity is 0, final lateral velocity is 0
-    # Assume initial acceleration (lat and long) is 0
-    # Assume final acceleration (lat and long) is 0
-
-    (d_0,s_0) = init_state["position"]
-    s_dot_0 = init_state["velocity"] #we assume this is longitudinal velocity
-    d_dot_0 = 0
-    d_dot_dot_0,s_dot_dot_0 = 0,0 
-
-    (d_T,_) = dest_state["position"]
-    s_dot_T = dest_state["velocity"] #we assume this is longitudinal velocity
-    d_dot_T = 0
-    d_dot_dot_T,s_dot_dot_T = 0,0
-
-    ########################################################################
-    #All these derivations explicitly follow from the above assumptions. Cannot be genralised
-    sig_0 = s_0
-    sig_1 = s_dot_0
-    sig_2 = s_dot_dot_0/2
-    sig_3 = (s_dot_T-s_dot_0)/(T**2)
-    sig_4 = (-1/(2*(T**3)))*(s_dot_T-s_dot_0)
-
-    line_s = Line(sig_4,sig_3,sig_2,sig_1,sig_0)
-
-    delta_0 = d_0
-    delta_1 = d_dot_0
-    delta_2 = d_dot_dot_0/2
-    delta_3 = (10/(T**3))*(d_T-d_0)
-    delta_4 = (-15/(T**4))*(d_T-d_0)
-    delta_5 = (6/(T**5))*(d_T-d_0)
-
-    line_d = Line(delta_5,delta_4,delta_3,delta_2,delta_1,delta_0)
-    ########################################################################
-
-    return line_d,line_s
-##########################################################################################################
-
-def putCarOnTraj(car,traj,time):
-    posit = traj.position(time)
-    v_x,v_y = traj.velocity(time)
-    velocity = math.sqrt(v_x**2 + v_y**2)
-    if v_x != 0:
-        # - here to account for the fact that y-axis is inverted but angles are not
-        heading = math.degrees(math.atan(-v_y/v_x))
-        if v_x<0: heading += 180 #tan has domain [-90.90], which constrains output of atan to left half-domain
-        heading%=360
-    else:
-        if v_y>0: heading = 270
-        else: heading = 90
-
-    car.setMotionParams(posit,heading,velocity)
-    car.sense()
 
 
 def evaluate(t,coefs):

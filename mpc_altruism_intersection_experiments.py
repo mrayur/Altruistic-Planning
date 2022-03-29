@@ -1,4 +1,4 @@
-from casadi import *
+from casadi import *  #这是导入了 numpy模块的每个类，可以直接使用类，无需句点表示法。例如：array([1,1])(不这样就应是numpy.array[1,1]()
 import math
 import matplotlib.pyplot as plt # for the 'spy' function and plotting results
 import numpy as np # to get teh size of matrices

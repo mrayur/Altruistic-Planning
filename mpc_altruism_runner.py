@@ -152,8 +152,8 @@ def makeOptimiser(dt,horizon,veh_width,veh_length,lane_width,speed_limit,accel_r
 
     ipopt_opts = {}
     #Stop IPOPT printing output
-    ipopt_opts["ipopt.print_level"] = 0;
-    ipopt_opts["ipopt.sb"] = "yes";
+    ipopt_opts["ipopt.print_level"] = 0
+    ipopt_opts["ipopt.sb"] = "yes"
     ipopt_opts["print_time"] = 0
     #Cap the maximum number of iterations
     ipopt_opts["ipopt.max_iter"] = 500
@@ -261,8 +261,8 @@ def makeJointOptimiser(dt,horizon,veh_width,veh_length,lane_width,speed_limit,ac
 
     ipopt_opts = {}
     #Stop IPOPT printing output
-    ipopt_opts["ipopt.print_level"] = 0;
-    ipopt_opts["ipopt.sb"] = "yes";
+    ipopt_opts["ipopt.print_level"] = 0
+    ipopt_opts["ipopt.sb"] = "yes"
     ipopt_opts["print_time"] = 0
     #Cap the maximum number of iterations
     ipopt_opts["ipopt.max_iter"] = 500
@@ -296,7 +296,6 @@ def makeTrajectories(cur_state,spec,T,init_state=None):
     if init_state is None:
         init_state = cur_state
 
-    #pdb.set_trace()
 
     for dx,dv in zip([x[0] for x in spec], [x[1] for x in spec]):
         label = "dx-{},dv-{}".format(dx,dv)
@@ -304,7 +303,7 @@ def makeTrajectories(cur_state,spec,T,init_state=None):
         dest_state["position"] = tuple([dest_state["position"][0]+dx,dest_state["position"][1]])
         dest_state["velocity"] += dv
         dest_state["parametrised_acceleration"] = (0,0) #parametrised acceleration is introduced to handle acceleration constraints
-        traj = Trajectory(cur_state,dest_state,T,label)
+        traj = Trajectory(cur_state,dest_state,T,label) #
         traj_list.append(traj)
 
     return traj_list
@@ -410,6 +409,7 @@ if __name__ == "__main__":
     lookahead_horizon = 4 # length of time MPC plans over
     N = int(lookahead_horizon/dt)
 
+
     speed_limit = 15
     accel_range = [-9,3] #range of accelerations permissable for optimal control
     yaw_rate_range = [-math.pi/180,math.pi/180]    
@@ -459,12 +459,12 @@ if __name__ == "__main__":
     #Index of c1's preferred action    
     c1_index = np.unravel_index(np.argmax(goal_grid[:,:,0]),goal_grid[:,:,0].shape)[0]
     #Index of action c1 expects c2 to take (c2's optimal choice if c1 is lead)
-    c1_c2_index = np.unravel_index(np.argmax(goal_grid[c1_index,:,1]),\
+    c1_c2_index = np.unravel_index(np.argmax(goal_grid[c1_index,:,1]),
                           goal_grid[c1_index,:,1].shape)[0]
     #Index of c2's preferred action
     c2_index = np.unravel_index(np.argmax(goal_grid[:,:,1]),goal_grid[:,:,1].shape)[1]
     #Index of action c1 expects c2 to take (c2's optimal choice if c1 is lead)
-    c2_c1_index = np.unravel_index(np.argmax(goal_grid[:,c2_index,0]),\
+    c2_c1_index = np.unravel_index(np.argmax(goal_grid[:,c2_index,0]),
                           goal_grid[:,c2_index,0].shape)[0]
 
     ########################################################################
@@ -501,33 +501,6 @@ if __name__ == "__main__":
     c2_dest[0] += c2_traj_specs[c2_index][0]
     c2_dest[2] += c2_traj_specs[c2_index][1]
 
-    ########################################################################
-    #For testing/debugging joint optimiser function
-    #true_c1_index = np.unravel_index(np.argmax(reward_grid[:,:,0]),reward_grid[:,:,0].shape)[0]
-    #true_c2_index = np.unravel_index(np.argmax(reward_grid[:,:,1]),reward_grid[:,:,1].shape)[1]
-    #
-    #true_c1_dest = np.copy(c1_init)
-    #true_c1_dest[0] += c1_traj_specs[true_c1_index][0]
-    #true_c1_dest[2] += c1_traj_specs[true_c1_index][1]
-    #
-    #true_c2_dest = np.copy(c2_init)
-    #true_c2_dest[0] += c2_traj_specs[true_c2_index][0]
-    #true_c2_dest[2] += c2_traj_specs[true_c2_index][1]
-    #
-    #jointOpt = makeJointOptimiser(dt,4,veh_width,veh_length,lane_width,speed_limit,accel_range,yaw_rate_range)
-    #c1_joint_opt_x,c1_joint_opt_u,c2_joint_opt_x,c2_joint_opt_u =\
-    #           jointOpt(c1_init,true_c1_dest,c2_init,true_c2_dest)
-    #
-    #for j in range(c1_joint_opt_x.shape[1]):
-    #    dist = math.sqrt((c1_joint_opt_x[0,j]-c2_joint_opt_x[0,j])**2+(c1_joint_opt_x[1,j]-c2_joint_opt_x[1,j])**2)
-    #    print("J: {}".format(dist))
-
-    ## Plot Resulting Trajectories
-
-    #dynamicPlotter(c1_joint_opt_x,c2_joint_opt_x)
-    #pdb.set_trace()
-    ########################################################################
-
     ##########################################################################
     #MPC Loop
     t = 0
@@ -556,7 +529,7 @@ if __name__ == "__main__":
         c1_c2_vel = c1_c2_vel[:N+1]
         c1_c2_heading = c1_c2_heading[:N+1]
 
-        c1_c2_x = np.array([[x[0] for x in c1_c2_posit],[x[1] for x in c1_c2_posit],\
+        c1_c2_x = np.array([[x[0] for x in c1_c2_posit],[x[1] for x in c1_c2_posit],
                             c1_c2_vel,c1_c2_heading])
         
         #Run MPC for C1
@@ -565,7 +538,7 @@ if __name__ == "__main__":
         ############################################
         #### MPC for C2 ############################
         #How C2 expects C1 to behave
-        c2_c1_traj = makeTrajectories(makeTrajState(*[x[0] for x in c1_x.tolist()],*[x[0] for x in c1_u.tolist()],axle_length),\
+        c2_c1_traj = makeTrajectories(makeTrajState(*[x[0] for x in c1_x.tolist()],*[x[0] for x in c1_u.tolist()],axle_length),
                                       [c1_traj_specs[c2_c1_index]],T-t,c1_init_state)[0]
         c2_c1_posit = c2_c1_traj.completePositionList(dt)
         c2_c1_vel = c2_c1_traj.completeVelocityList(dt)
@@ -578,7 +551,7 @@ if __name__ == "__main__":
             c2_c1_heading += [math.radians(x) for x in c2_c1_backup_traj.completeHeadingList(dt)[1:]]
 
         #Behaviour within lookahead horizon
-        c2_c1_posit = c2_c1_posit[:N+1]
+        c2_c1_posit = c2_c1_posit[:N+1] #之前的c2_c1_posit生成了从当前时刻到结束（t=10s）的多个路径点，这里约束到21个点
         c2_c1_vel = c2_c1_vel[:N+1]
         c2_c1_heading = c2_c1_heading[:N+1]
         c2_c1_x = np.array([[x[0] for x in c2_c1_posit],[x[1] for x in c2_c1_posit],\
@@ -637,7 +610,7 @@ if __name__ == "__main__":
 
         ##############################################
         #Store MPC generated trajectories
-        c1_mpc_x = np.hstack((c1_mpc_x,np.array(c1_opt_x[:,:num_timesteps])))
+        c1_mpc_x = np.hstack((c1_mpc_x,np.array(c1_opt_x[:,:num_timesteps]))) #横向拼接，np.hstack(())
         c2_mpc_x = np.hstack((c2_mpc_x,np.array(c2_opt_x[:,:num_timesteps])))
         c1_mpc_u = np.hstack((c1_mpc_u,np.array(c1_opt_u[:,:num_timesteps])))
         c2_mpc_u = np.hstack((c2_mpc_u,np.array(c2_opt_u[:,:num_timesteps])))
@@ -696,12 +669,6 @@ if __name__ == "__main__":
 
         print("T is: {}\tD1: {}\t D2: {}".format(t,computeDistance(c1_x,c1_dest),computeDistance(c2_x,c2_dest)))
 
-
-    #print("MPC Complete")
-    #t2 = datetime.datetime.now()
-    #print("Time: {}".format(t2-t1))
-    #pdb.set_trace()
-
     ########################################################################
     #Comparing MPC with fit trajectory
     true_c1_index = np.unravel_index(np.argmax(reward_grid[:,:,0]),reward_grid[:,:,0].shape)[0]
@@ -715,12 +682,13 @@ if __name__ == "__main__":
     true_c2_dest[0] += c2_traj_specs[true_c2_index][0]
     true_c2_dest[2] += c2_traj_specs[true_c2_index][1]
  
-    jointOpt = makeJointOptimiser(dt,t,veh_width,veh_length,lane_width,speed_limit,accel_range,yaw_rate_range)
+    jointOpt = makeJointOptimiser(dt,t,veh_width,veh_length,lane_width,speed_limit,accel_range,yaw_rate_range) #联合控制c1,c2，只需要一次，不许在迭代过程中更新，因为二者都听话，同时可控
     c1_joint_opt_x,c1_joint_opt_u,c2_joint_opt_x,c2_joint_opt_u =\
                jointOpt(c1_init,true_c1_dest,c2_init,true_c2_dest)
     
     c1_joint_ssu = np.sum(c1_joint_opt_u**2)
     c2_joint_ssu = np.sum(c2_joint_opt_u**2)
+
 
     c1_mpc_ssu = np.sum(c1_mpc_u**2)
     c2_mpc_ssu = np.sum(c2_mpc_u**2)
@@ -733,9 +701,9 @@ if __name__ == "__main__":
     print("MPC SSU Total: {}\t OPT SSU Total: {}\t Diff Total: {}".format(c1_mpc_ssu+c2_mpc_ssu,c1_joint_ssu+c2_joint_ssu,c1_ssu_diff+c2_ssu_diff))
 
     # Plot Resulting Trajectories
-    pdb.set_trace()
+
     dynamicPlotter(c1_mpc_x,c2_mpc_x)
-    dynamicPlotter(c1_joint_opt_x,c2_joint_opt_x)
-    pdb.set_trace()
+    dynamicPlotter(np.array(c1_joint_opt_x),np.array(c2_joint_opt_x))
+
 
 #####################################

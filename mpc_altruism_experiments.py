@@ -272,10 +272,10 @@ if __name__ == "__main__":
 
     ###################################
     #Experiment Parameters
-    exp_name = "AugmentedAltruism"
+
     #rewardDefinition = makeBaselineRewardGrid
     #rewardDefinition = makeVanillaRewardGrid
-    rewardDefinition = makeAugmentedRewardGrid
+    rewardDefinition = makeAugmentedAltRewardGrid
     #rewardDefinition = makeSVORewardGrid
 
     values = [0,.25,.51,.75,.99] #Altruism
@@ -284,8 +284,17 @@ if __name__ == "__main__":
     ###################################
     #Initialise Experiment File
     import datetime
+    exp_name = "AugmentedAltruism"
     start_time = datetime.datetime.now()
-    exp_file = open("{}-{}.txt".format(exp_name,start_time),"w")
+    # exp_file = open("{}-{}.txt".format(exp_name,start_time),"w")
+    path='E:\Altruistic-Planning\{}-{}.txt'.format(exp_name,start_time)
+    list_str=list(path)
+    list_str.pop(54)
+    list_str.pop(57)
+    path=''.join(list_str)
+    path=path.replace(' ','_')
+    path=path.replace('.','_')
+    exp_file = open(path,"w")
     exp_file.write("~~####~~\n\n")
     exp_file.write("axle_length: {}\ndt: {}\nepsilon: {}\tlane_width: {}\nT: {}\nlookahead_horizon: {}\nN: {}\nspeed_limit: {}\taccel_range: {}\tyaw_rate_range: {}\n".format(axle_length,dt,epsilon,lane_width,T,lookahead_horizon,N,speed_limit,accel_range,yaw_rate_range))
     exp_file.write("\n")
@@ -312,7 +321,7 @@ if __name__ == "__main__":
 
     for a1 in values:
         for a2 in values:
-            exp_file = open("{}-{}.txt".format(exp_name,start_time),"a")
+            exp_file = open(path,"a")
             exp_file.write("\n~~####~~\n\n")
             exp_file.write("a1: {}\t a2: {}\n".format(a1,a2))
             
@@ -482,17 +491,17 @@ if __name__ == "__main__":
 
                 #####################################################################
                 # For Comparing MPC to Fit Trajectory
-                import pdb
-                pdb.set_trace()
-                c1_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)
+                # import pdb
+                # pdb.set_trace()
+                c1_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)[0]
                 c1_traj_u = sum([x[0]**2+x[1]**2 for x in c1_traj.completeActionList(axle_length,dt)])
-                c2_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)
+                c2_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)[0]
                 c2_traj_u = sum([x[0]**2+x[1]**2 for x in c2_traj.completeActionList(axle_length,dt)])
 
                 
                 #####################################################################
                 
-                exp_file = open("{}-{}.txt".format(exp_name,start_time),"a")
+                exp_file = open(path,"a")
                 exp_file.write("Exp_Num: {}\tt: {}\tc1_t: {}\tc2_t: {}\n".format(exp_num,t,c1_t,c2_t))
                 exp_file.close()
 

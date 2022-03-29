@@ -123,7 +123,7 @@ def makeJointIDMOptimiser(dt,horizon,veh_width,veh_length,lane_width,speed_limit
     #Minimise trajectory duration for planning car
     c1_traj_duration_weight = opti.parameter(4,1)
     opti.set_value(c1_traj_duration_weight,[2,0,1,0])
-    c1_min_traj_duration = sumsqr((x1[:,:]-dest_state1)*c1_traj_duration_weight)
+    c1_min_traj_duration = sumsqr((x1[:,:]-dest_state1)*c1_traj_duration_weight) #求矩阵的平方和
     #Minimise final distance from objective for planning car
     c1_final_distance_weight = opti.parameter(4,1)
     opti.set_value(c1_final_distance_weight,[2,0,1,0])
