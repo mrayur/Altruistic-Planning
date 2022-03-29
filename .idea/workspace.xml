@@ -2,16 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="02ee71db-8e87-456f-8487-654e990f0cb2" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/active_altruism_learning.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bayes_filter_test.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/conflict_aware_active_altruism_learning.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AugmentedAltruism-2022-03-29_1859" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/mpc_altruism_experiments.py" beforeDir="false" afterPath="$PROJECT_DIR$/mpc_altruism_experiments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mpc_altruism_intersection_experiments.py" beforeDir="false" afterPath="$PROJECT_DIR$/mpc_altruism_intersection_experiments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mpc_altruism_lane_change_experiments.py" beforeDir="false" afterPath="$PROJECT_DIR$/mpc_altruism_lane_change_experiments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mpc_altruism_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/mpc_altruism_runner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/trajectory_type_definitions.py" beforeDir="false" afterPath="$PROJECT_DIR$/trajectory_type_definitions.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -206,7 +199,7 @@
       <workItem from="1647565929556" duration="75684000" />
       <workItem from="1648189474952" duration="25592000" />
       <workItem from="1648372403334" duration="647000" />
-      <workItem from="1648429278604" duration="18209000" />
+      <workItem from="1648429278604" duration="20395000" />
     </task>
     <servers />
   </component>
@@ -235,6 +228,12 @@
         </breakpoint>
       </default-breakpoints>
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="path" language="Python" />
+        <watch expression="list_str" />
+      </configuration>
+    </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Altruistic_Planning$main.coverage" NAME="main Coverage Results" MODIFIED="1633741525645" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -243,7 +242,7 @@
     <SUITE FILE_PATH="coverage/active_altruism_learning_py$mpc_altruism_lane_change_experiments.coverage" NAME="mpc_altruism_lane_change_experiments Coverage Results" MODIFIED="1647566021120" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/active_altruism_learning_py$mpc_altruism_lane_change_runner.coverage" NAME="mpc_altruism_lane_change_runner Coverage Results" MODIFIED="1646812508153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Altruistic_Planning$altruism_estimation_test.coverage" NAME="altruism_estimation_test Coverage Results" MODIFIED="1632900289753" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/active_altruism_learning_py$mpc_altruism_experiments.coverage" NAME="mpc_altruism_experiments Coverage Results" MODIFIED="1648551550328" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/active_altruism_learning_py$mpc_altruism_experiments.coverage" NAME="mpc_altruism_experiments Coverage Results" MODIFIED="1648559682998" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/active_altruism_learning_py$PlotTXT.coverage" NAME="PlotTXT Coverage Results" MODIFIED="1648094095433" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/active_altruism_learning_py$active_altruism_learning.coverage" NAME="active_altruism_learning Coverage Results" MODIFIED="1646636812561" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/active_altruism_learning_py$altruism_test.coverage" NAME="altruism_test Coverage Results" MODIFIED="1646812098703" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

@@ -278,7 +278,7 @@ if __name__ == "__main__":
     rewardDefinition = makeAugmentedAltRewardGrid
     #rewardDefinition = makeSVORewardGrid
 
-    values = [0,.25,.51,.75,.99] #Altruism
+    values = [.1,.2,.3,.4,.5,.6,.7,.8,.9,.99] #Altruism
     #values = [0,math.pi/8,math.pi/4,3*math.pi/8,math.pi/2] #SVO
     
     ###################################
@@ -289,12 +289,16 @@ if __name__ == "__main__":
     # exp_file = open("{}-{}.txt".format(exp_name,start_time),"w")
     path='E:\Altruistic-Planning\{}-{}.txt'.format(exp_name,start_time)
     list_str=list(path)
-    list_str.pop(54)
-    list_str.pop(57)
+    list_str.pop(51)
+    list_str.pop(53)
+    list_str.pop(53)
+    list_str.pop(45)
+    list_str.pop(47)
+    list_str.pop(40)
+    list_str.pop(51)
+    list_str.pop(53)
     path=''.join(list_str)
-    path=path.replace(' ','_')
-    path=path.replace('.','_')
-    exp_file = open(path,"w")
+    exp_file = open('path',"w")
     exp_file.write("~~####~~\n\n")
     exp_file.write("axle_length: {}\ndt: {}\nepsilon: {}\tlane_width: {}\nT: {}\nlookahead_horizon: {}\nN: {}\nspeed_limit: {}\taccel_range: {}\tyaw_rate_range: {}\n".format(axle_length,dt,epsilon,lane_width,T,lookahead_horizon,N,speed_limit,accel_range,yaw_rate_range))
     exp_file.write("\n")
@@ -501,7 +505,7 @@ if __name__ == "__main__":
                 
                 #####################################################################
                 
-                exp_file = open(path,"a")
+                exp_file = open('path',"a")
                 exp_file.write("Exp_Num: {}\tt: {}\tc1_t: {}\tc2_t: {}\n".format(exp_num,t,c1_t,c2_t))
                 exp_file.close()
 
