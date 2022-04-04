@@ -281,7 +281,7 @@ if __name__ == "__main__":
     T = 10 #Trajectory length
     lookahead_horizon = 4 # length of time MPC plans over
     N = int(lookahead_horizon/dt)
-
+    shift_values=[]
     speed_limit = 15
     accel_range = [-3,3]
     yaw_rate_range = [-math.pi/180,math.pi/180]    
@@ -367,162 +367,157 @@ if __name__ == "__main__":
             exp_file.write("~~####~~\n\n")
             exp_file.close()
             
-            np.random.seed(27)
-            for exp_num in range(num_its):
-                c1_noise_x = -.25*lane_width + np.random.random()*lane_width*.5
-                c1_noise_y = np.random.random()*5 
-                c2_noise_x = -.25*lane_width + np.random.random()*lane_width*.5
-                c2_noise_y = np.random.random()*5
+            for dy_c1 in shift_values:
+                for dy_c2 in shift_values:
+                    init_c1_posit = [0.5*lane_width,dy_c1] # middle of right lane
+                    init_c2_posit = [1.5*lane_width,dy_c2] # middle of right lane
+                    init_c1_vel = 15
+                    init_c2_vel = 15
+                    init_c1_heading = math.pi/2
+                    init_c2_heading = math.pi/2
+                    init_c1_accel = 0
+                    init_c2_accel = 0
+                    init_c1_yaw_rate = 0
+                    init_c2_yaw_rate = 0
 
-                init_c1_posit = [0.5*lane_width+c1_noise_x,0+c1_noise_y] # middle of right lane
-                init_c2_posit = [1.5*lane_width+c2_noise_x,0+c2_noise_y] # middle of right lane
-                init_c1_vel = 15
-                init_c2_vel = 15
-                init_c1_heading = math.pi/2
-                init_c2_heading = math.pi/2
-                init_c1_accel = 0
-                init_c2_accel = 0
-                init_c1_yaw_rate = 0
-                init_c2_yaw_rate = 0
+                    c1_init_state = makeTrajState(init_c1_posit[0],init_c1_posit[1],init_c1_vel,\
+                                                  init_c1_heading,init_c1_accel,init_c1_yaw_rate,axle_length)
+                    c2_init_state = makeTrajState(init_c2_posit[0],init_c2_posit[1],init_c2_vel,\
+                                                  init_c2_heading,init_c2_accel,init_c2_yaw_rate,axle_length)
 
-                c1_init_state = makeTrajState(init_c1_posit[0],init_c1_posit[1],init_c1_vel,\
-                                              init_c1_heading,init_c1_accel,init_c1_yaw_rate,axle_length)
-                c2_init_state = makeTrajState(init_c2_posit[0],init_c2_posit[1],init_c2_vel,\
-                                              init_c2_heading,init_c2_accel,init_c2_yaw_rate,axle_length)
+                    #No Noise
+                    # Used for defining destination states
+                    c1_x = np.array([*init_c1_posit,init_c1_vel,init_c1_heading]).reshape(4,1)
+                    c2_x = np.array([*init_c2_posit,init_c2_vel,init_c2_heading]).reshape(4,1)
 
-                #No Noise
-                # Used for defining destination states
-                c1_x = np.array([*init_c1_posit,init_c1_vel,init_c1_heading]).reshape(4,1)
-                c2_x = np.array([*init_c2_posit,init_c2_vel,init_c2_heading]).reshape(4,1)
-                
-                c1_u = np.array([0,0]).reshape(2,1)
-                c2_u = np.array([0,0]).reshape(2,1)
+                    c1_u = np.array([0,0]).reshape(2,1)
+                    c2_u = np.array([0,0]).reshape(2,1)
 
-                #Adjust Destination for noise so that intended target is still in middle of lane
-                c1_init = np.array([*init_c1_posit,init_c1_vel,init_c1_heading]).reshape(4,1)
-                c2_init = np.array([*init_c2_posit,init_c2_vel,init_c2_heading]).reshape(4,1)
-            
-                c1_dest = np.copy(c1_x)
-                c1_dest[0] += c1_traj_specs[c1_index][0] - c1_noise_x
-                c1_dest[2] += c1_traj_specs[c1_index][1]
-                
-                c2_dest = np.copy(c2_x)
-                c2_dest[0] += c2_traj_specs[c2_index][0] - c2_noise_x
-                c2_dest[2] += c2_traj_specs[c2_index][1]
+                    #Adjust Destination for noise so that intended target is still in middle of lane
+                    c1_init = np.array([*init_c1_posit,init_c1_vel,init_c1_heading]).reshape(4,1)
+                    c2_init = np.array([*init_c2_posit,init_c2_vel,init_c2_heading]).reshape(4,1)
 
-                t = 0
-                c1_t,c2_t = None,None
-                c1_to_global,c2_to_global = False, False
-                c1_mpc_x,c2_mpc_x = np.array(c1_x),np.array(c2_x)
-                c1_mpc_u,c2_mpc_u = np.array(c1_u),np.array(c2_u)
-                num_timesteps = 4
-                
-                while t<T and (c1_t is None or c2_t is None):
-                    ################################
-                    #### MPC for C1 ################
-                    c1_c2_traj = makeTrajectories(makeTrajState(*[x[0] for x in c2_x.tolist()],*[x[0] for x in c2_u.tolist()],axle_length),\
-                                                  [c2_traj_specs[c1_c2_index]],T-t,c2_init_state)[0]
-                    c1_c2_posit = c1_c2_traj.completePositionList(dt)
-                    c1_c2_vel = c1_c2_traj.completeVelocityList(dt)
-                    c1_c2_heading = [math.radians(x) for x in c1_c2_traj.completeHeadingList(dt)]
-                    # Not enough trajectory left, assume constant velocity thereafter
-                    if len(c1_c2_posit)<N+1:
-                        c1_c2_backup_traj = makeTrajectories(c1_c2_traj.state(T,axle_length),[(0,0)],T)[0]
-                        c1_c2_posit += c1_c2_backup_traj.completePositionList(dt)
-                        c1_c2_vel += c1_c2_backup_traj.completeVelocityList(dt)
-                        c1_c2_heading += [math.radians(x) for x in c1_c2_backup_traj.completeHeadingList(dt)]
+                    c1_dest = np.copy(c1_x)
+                    c1_dest[0] += c1_traj_specs[c1_index][0] - dy_c1
+                    c1_dest[2] += c1_traj_specs[c1_index][1]
 
-                    c1_c2_posit = c1_c2_posit[:N+1]
-                    c1_c2_vel = c1_c2_vel[:N+1]
-                    c1_c2_heading = c1_c2_heading[:N+1]
+                    c2_dest = np.copy(c2_x)
+                    c2_dest[0] += c2_traj_specs[c2_index][0] - dy_c2
+                    c2_dest[2] += c2_traj_specs[c2_index][1]
 
-                    c1_c2_x = np.array([[x[0] for x in c1_c2_posit],[x[1] for x in c1_c2_posit],\
-                                        c1_c2_vel,c1_c2_heading])
-                    c1_opt_x,c1_opt_u = optimiser(c1_x,c1_dest,c1_c2_x)
+                    t = 0
+                    c1_t,c2_t = None,None
+                    c1_to_global,c2_to_global = False, False
+                    c1_mpc_x,c2_mpc_x = np.array(c1_x),np.array(c2_x)
+                    c1_mpc_u,c2_mpc_u = np.array(c1_u),np.array(c2_u)
+                    num_timesteps = 4
 
-                    ################################
-                    #### MPC for C2 ################
-                    c2_c1_traj = makeTrajectories(makeTrajState(*[x[0] for x in c1_x.tolist()],*[x[0] for x in c1_u.tolist()],axle_length),\
-                                                  [c1_traj_specs[c2_c1_index]],T-t,c1_init_state)[0]
-                    c2_c1_posit = c2_c1_traj.completePositionList(dt)
-                    c2_c1_vel = c2_c1_traj.completeVelocityList(dt)
-                    c2_c1_heading = [math.radians(x) for x in c2_c1_traj.completeHeadingList(dt)]
-                    # Not enough trajectory left, assume constant velocity thereafter
-                    if len(c2_c1_posit)<N+1:
-                        c2_c1_backup_traj = makeTrajectories(c2_c1_traj.state(T,axle_length),[(0,0)],T)[0]
-                        c2_c1_posit += c2_c1_backup_traj.completePositionList(dt)
-                        c2_c1_vel += c2_c1_backup_traj.completeVelocityList(dt)
-                        c2_c1_heading += [math.radians(x) for x in c2_c1_backup_traj.completeHeadingList(dt)]
+                    while t<T and (c1_t is None or c2_t is None):
+                        ################################
+                        #### MPC for C1 ################
+                        c1_c2_traj = makeTrajectories(makeTrajState(*[x[0] for x in c2_x.tolist()],*[x[0] for x in c2_u.tolist()],axle_length),\
+                                                      [c2_traj_specs[c1_c2_index]],T-t,c2_init_state)[0]
+                        c1_c2_posit = c1_c2_traj.completePositionList(dt)
+                        c1_c2_vel = c1_c2_traj.completeVelocityList(dt)
+                        c1_c2_heading = [math.radians(x) for x in c1_c2_traj.completeHeadingList(dt)]
+                        # Not enough trajectory left, assume constant velocity thereafter
+                        if len(c1_c2_posit)<N+1:
+                            c1_c2_backup_traj = makeTrajectories(c1_c2_traj.state(T,axle_length),[(0,0)],T)[0]
+                            c1_c2_posit += c1_c2_backup_traj.completePositionList(dt)
+                            c1_c2_vel += c1_c2_backup_traj.completeVelocityList(dt)
+                            c1_c2_heading += [math.radians(x) for x in c1_c2_backup_traj.completeHeadingList(dt)]
 
-                    c2_c1_posit = c2_c1_posit[:N+1]
-                    c2_c1_vel = c2_c1_vel[:N+1]
-                    c2_c1_heading = c2_c1_heading[:N+1]
-                    c2_c1_x = np.array([[x[0] for x in c2_c1_posit],[x[1] for x in c2_c1_posit],\
-                                        c2_c1_vel,c2_c1_heading])
-                    c2_opt_x,c2_opt_u = optimiser(c2_x,c2_dest,c2_c1_x)
-                    
-                    #if np.max(c1_opt_x[0,:])<2 or np.max(c1_opt_x[0,:])>3 or np.max(c2_opt_x[0,:])<7 or np.max(c2_opt_x[0,:])>8:
-                    #    print("Problem here")
-                    #    pdb.set_trace()
+                        c1_c2_posit = c1_c2_posit[:N+1]
+                        c1_c2_vel = c1_c2_vel[:N+1]
+                        c1_c2_heading = c1_c2_heading[:N+1]
 
-                    c1_x = np.array(c1_opt_x[:,num_timesteps-1])
-                    c2_x = np.array(c2_opt_x[:,num_timesteps-1])
-                    c1_u = np.array(c1_opt_u[:,num_timesteps-1])
-                    c2_u = np.array(c2_opt_u[:,num_timesteps-1])
-                    t += num_timesteps*dt
+                        c1_c2_x = np.array([[x[0] for x in c1_c2_posit],[x[1] for x in c1_c2_posit],\
+                                            c1_c2_vel,c1_c2_heading])
+                        c1_opt_x,c1_opt_u = optimiser(c1_x,c1_dest,c1_c2_x)
 
-                    c1_mpc_x = np.hstack((c1_mpc_x,np.array(c1_opt_x[:,:num_timesteps])))
-                    c2_mpc_x = np.hstack((c2_mpc_x,np.array(c2_opt_x[:,:num_timesteps])))
-                    c1_mpc_u = np.hstack((c1_mpc_u,np.array(c1_opt_u[:,:num_timesteps])))
-                    c2_mpc_u = np.hstack((c2_mpc_u,np.array(c2_opt_u[:,:num_timesteps])))
+                        ################################
+                        #### MPC for C2 ################
+                        c2_c1_traj = makeTrajectories(makeTrajState(*[x[0] for x in c1_x.tolist()],*[x[0] for x in c1_u.tolist()],axle_length),\
+                                                      [c1_traj_specs[c2_c1_index]],T-t,c1_init_state)[0]
+                        c2_c1_posit = c2_c1_traj.completePositionList(dt)
+                        c2_c1_vel = c2_c1_traj.completeVelocityList(dt)
+                        c2_c1_heading = [math.radians(x) for x in c2_c1_traj.completeHeadingList(dt)]
+                        # Not enough trajectory left, assume constant velocity thereafter
+                        if len(c2_c1_posit)<N+1:
+                            c2_c1_backup_traj = makeTrajectories(c2_c1_traj.state(T,axle_length),[(0,0)],T)[0]
+                            c2_c1_posit += c2_c1_backup_traj.completePositionList(dt)
+                            c2_c1_vel += c2_c1_backup_traj.completeVelocityList(dt)
+                            c2_c1_heading += [math.radians(x) for x in c2_c1_backup_traj.completeHeadingList(dt)]
 
-                    if c1_t is None and computeDistance(c1_x,c1_dest)<epsilon:
-                        if c1_to_global or max(reward_grid[c1_index,:,0]) == 1:
-                            c1_t = t
-                        else:
-                           c1_index = np.unravel_index(np.argmax(reward_grid[:,:,0]),reward_grid[:,:,0].shape)[0]
-                           c1_dest = np.copy(c1_init)
-                           c1_dest[0] += c1_traj_specs[c1_index][0]
-                           c1_dest[2] += c1_traj_specs[c1_index][1]
-                           c1_to_global = True #Now definitely going to global objective
+                        c2_c1_posit = c2_c1_posit[:N+1]
+                        c2_c1_vel = c2_c1_vel[:N+1]
+                        c2_c1_heading = c2_c1_heading[:N+1]
+                        c2_c1_x = np.array([[x[0] for x in c2_c1_posit],[x[1] for x in c2_c1_posit],\
+                                            c2_c1_vel,c2_c1_heading])
+                        c2_opt_x,c2_opt_u = optimiser(c2_x,c2_dest,c2_c1_x)
 
-                    elif c1_t is not None and computeDistance(c1_x,c1_dest)>epsilon: c1_t = None
+                        #if np.max(c1_opt_x[0,:])<2 or np.max(c1_opt_x[0,:])>3 or np.max(c2_opt_x[0,:])<7 or np.max(c2_opt_x[0,:])>8:
+                        #    print("Problem here")
+                        #    pdb.set_trace()
+
+                        c1_x = np.array(c1_opt_x[:,num_timesteps-1])
+                        c2_x = np.array(c2_opt_x[:,num_timesteps-1])
+                        c1_u = np.array(c1_opt_u[:,num_timesteps-1])
+                        c2_u = np.array(c2_opt_u[:,num_timesteps-1])
+                        t += num_timesteps*dt
+
+                        c1_mpc_x = np.hstack((c1_mpc_x,np.array(c1_opt_x[:,:num_timesteps])))
+                        c2_mpc_x = np.hstack((c2_mpc_x,np.array(c2_opt_x[:,:num_timesteps])))
+                        c1_mpc_u = np.hstack((c1_mpc_u,np.array(c1_opt_u[:,:num_timesteps])))
+                        c2_mpc_u = np.hstack((c2_mpc_u,np.array(c2_opt_u[:,:num_timesteps])))
+
+                        if c1_t is None and computeDistance(c1_x,c1_dest)<epsilon:
+                            if c1_to_global or max(reward_grid[c1_index,:,0]) == 1:
+                                c1_t = t
+                            else:
+                               c1_index = np.unravel_index(np.argmax(reward_grid[:,:,0]),reward_grid[:,:,0].shape)[0]
+                               c1_dest = np.copy(c1_init)
+                               c1_dest[0] += c1_traj_specs[c1_index][0]
+                               c1_dest[2] += c1_traj_specs[c1_index][1]
+                               c1_to_global = True #Now definitely going to global objective
+
+                        elif c1_t is not None and computeDistance(c1_x,c1_dest)>epsilon: c1_t = None
 
 
-                    if c2_t is None and computeDistance(c2_x,c2_dest)<epsilon:
-                        if c2_to_global or max(reward_grid[:,c2_index,1]) == 1:
-                            c2_t = t
-                        else:
-                           c2_index = np.unravel_index(np.argmax(reward_grid[:,:,1]),reward_grid[:,:,1].shape)[1]
-                           c2_dest = np.copy(c2_init)
-                           c2_dest[0] += c2_traj_specs[c2_index][0]
-                           c2_dest[2] += c2_traj_specs[c2_index][1]
-                           c2_to_global = True #Now definitely going to global objective
+                        if c2_t is None and computeDistance(c2_x,c2_dest)<epsilon:
+                            if c2_to_global or max(reward_grid[:,c2_index,1]) == 1:
+                                c2_t = t
+                            else:
+                               c2_index = np.unravel_index(np.argmax(reward_grid[:,:,1]),reward_grid[:,:,1].shape)[1]
+                               c2_dest = np.copy(c2_init)
+                               c2_dest[0] += c2_traj_specs[c2_index][0]
+                               c2_dest[2] += c2_traj_specs[c2_index][1]
+                               c2_to_global = True #Now definitely going to global objective
 
-                    elif c2_t is not None and computeDistance(c2_x,c2_dest)>epsilon: c2_t = None
+                        elif c2_t is not None and computeDistance(c2_x,c2_dest)>epsilon: c2_t = None
 
 
-                    #if c1_t is None and computeDistance(c1_x,c1_dest)<epsilon: c1_t = t
-                    #if c2_t is None and computeDistance(c2_x,c2_dest)<epsilon: c2_t = t
+                        #if c1_t is None and computeDistance(c1_x,c1_dest)<epsilon: c1_t = t
+                        #if c2_t is None and computeDistance(c2_x,c2_dest)<epsilon: c2_t = t
 
-                # If time out give maximum possible value
-                if c1_t is None: c1_t = t
-                if c2_t is None: c2_t = t
+                    # If time out give maximum possible value
+                    if c1_t is None: c1_t = t
+                    if c2_t is None: c2_t = t
 
-                #####################################################################
-                # For Comparing MPC to Fit Trajectory
-                # import pdb
-                # pdb.set_trace()
-                c1_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)[0]
-                c1_traj_u = sum([x[0]**2+x[1]**2 for x in c1_traj.completeActionList(axle_length,dt)])
-                c2_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)[0]
-                c2_traj_u = sum([x[0]**2+x[1]**2 for x in c2_traj.completeActionList(axle_length,dt)])
+                    #####################################################################
+                    # For Comparing MPC to Fit Trajectory
+                    # import pdb
+                    # pdb.set_trace()
+                    c1_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)[0]
+                    c1_traj_u = sum([x[0]**2+x[1]**2 for x in c1_traj.completeActionList(axle_length,dt)])
+                    c2_traj = makeTrajectories(c1_init_state,[c1_traj_specs[c1_index]],T)[0]
+                    c2_traj_u = sum([x[0]**2+x[1]**2 for x in c2_traj.completeActionList(axle_length,dt)])
 
-                
-                #####################################################################
-                
-                exp_file = open('path',"a")
-                exp_file.write("Exp_Num: {}\tt: {}\tc1_t: {}\tc2_t: {}\n".format(exp_num,t,c1_t,c2_t))
-                exp_file.close()
+
+                    #####################################################################
+
+                    exp_file = open('path',"a")
+                    exp_file.write("Exp_Num: {}\tt: {}\tc1_t: {}\tc2_t: {}\n".format(dy_c1,dy_c2,t,c1_t,c2_t))
+                    exp_file.close()
 
 #####################################
