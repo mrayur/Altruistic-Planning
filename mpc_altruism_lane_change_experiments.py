@@ -434,7 +434,7 @@ if __name__ == "__main__":
 
     alt_values = [.1,.9] #Altruism
     N = 6
-shift_values = [x*.25*veh_length for x in range(N+1)]
+    shift_values = [x*.25*veh_length for x in range(N+1)]
  
     ###################################
     #Define Trajectory Options
