@@ -90,8 +90,8 @@ def makeJointIDMOptimiser(dt,horizon,veh_width,veh_length,lane_width,speed_limit
     bounds = [veh_width/2,2*lane_width-veh_width/2,0,speed_limit,0,math.pi,accel_range[0],accel_range[1],\
               yaw_rate_range[0],yaw_rate_range[1]]
 
-    safe_x_radius = veh_width + .25
-    safe_y_radius = veh_length + .5
+    safe_x_radius = veh_width/2 + 1
+    safe_y_radius = veh_length/2 +1
 
     opti = casadi.Opti()
 
@@ -277,7 +277,7 @@ def doMPC(num_timesteps,T,c1_init,c1_dests,c1_leads,c2_init,c2_dests,c2_leads,sh
     t = 0
     c1_t,c2_t = None,None #time at which each car completed their true objective
     while t<T and (c1_t is None or c2_t is None):
-        #print("t is: {}\t T is: {}".format(t,T))
+        # print("t is: {}\t T is: {}".format(t,T))
         ###########################################
         #### MPC for C1 ###########################
         c1_opt_x,c1_opt_u,c1_c2_opt_x,c1_c2_opt_u = optimiser(c1_x,c1_dest,c1_c1_has_lead,c2_x,c1_c2_dest,c1_c2_has_lead)
@@ -286,7 +286,7 @@ def doMPC(num_timesteps,T,c1_init,c1_dests,c1_leads,c2_init,c2_dests,c2_leads,sh
         #### MPC for C2 ############################
         c2_opt_x,c2_opt_u,c2_c1_opt_x,c2_c1_opt_u = optimiser(c2_x,c2_dest,c2_c2_has_lead,c1_x,c2_c1_dest,c2_c1_has_lead)
 
-        #print("Optimal Trajectories Generated")
+        # print("Optimal Trajectories Generated")
 
         ############################################
         #### Handle Optimiser Singularity
@@ -380,6 +380,29 @@ def doMPC(num_timesteps,T,c1_init,c1_dests,c1_leads,c2_init,c2_dests,c2_leads,sh
     #print("Returning successful results")
     return result,t,c1_has_shift,c2_has_shift,c1_mpc_x,c1_mpc_u,c2_mpc_x,c2_mpc_u 
 
+def dynamicPlotter(mpc_x1,mpc_x2):
+    c1_plt_x = []
+    c1_plt_y = []
+    c2_plt_x = []
+    c2_plt_y = []
+
+    y_lim = max(np.max(mpc_x1[1,:]),np.max(mpc_x2[1,:]))*1.1
+
+    plt.ion()
+    plt.figure()
+    plt.xlim(0,2*lane_width)
+    plt.ylim(0,y_lim)
+
+    for i in range(mpc_x1.shape[1]):
+        c1_plt_x.append(mpc_x1[0,i])
+        c1_plt_y.append(mpc_x1[1,i])
+        c2_plt_x.append(mpc_x2[0,i])
+        c2_plt_y.append(mpc_x2[1,i])
+        plt.plot(c1_plt_x,c1_plt_y,'g-')
+        plt.plot(c2_plt_x,c2_plt_y,'r-')
+        plt.draw()
+        plt.pause(1e-17)
+        time.sleep(dt)
 
 if __name__ == "__main__":
     ###################################
@@ -425,7 +448,13 @@ if __name__ == "__main__":
     import datetime
     exp_name = "IDM_MPC_Vary_init"
     start_time = datetime.datetime.now()
-    exp_file = open("{}-{}.txt".format(exp_name,start_time),"w")
+    list_str=list("{}-{}.txt".format(exp_name,start_time))
+    list_str.pop(28)
+    list_str.pop(31)
+    list_str.pop(34)
+    list_str.pop(37)
+    path=''.join(list_str)
+    exp_file = open("path","w")
     exp_file.write("{}\n\n".format(CONTENT_DIVIDER))
     exp_file.write("axle_length: {}\ndt: {}\nepsilon: {}\tlane_width: {}\nT: {}\nlookahead_horizon: {}\nN: {}\nspeed_limit: {}\taccel_range: {}\tyaw_rate_range: {}\n".format(axle_length,dt,epsilon,lane_width,T,lookahead_horizon,N,speed_limit,accel_range,yaw_rate_range))
     exp_file.write("\n")
@@ -442,7 +471,7 @@ if __name__ == "__main__":
 
     for a1 in alt_values:
         for a2 in alt_values:
-            exp_file = open("{}-{}.txt".format(exp_name,start_time),"a")
+            exp_file = open("path".format(exp_name,start_time),"a")
             exp_file.write("\n{}\n\n".format(CONTENT_DIVIDER))
             exp_file.write("a1: {}\t a2: {}\n".format(a1,a2))
             
@@ -463,7 +492,7 @@ if __name__ == "__main__":
             
             for dy_c1 in shift_values:
                 for dy_c2 in shift_values:
-                    #print("Working on A1: {} S1: {} A2: {} S2: {}".format(a1,dy_c1,a2,dy_c2))
+                    # print("Working on A1: {} S1: {} A2: {} S2: {}".format(a1,dy_c1,a2,dy_c2))
                     init_c1_posit = [0.5*lane_width,dy_c1] # middle of right lane
                     init_c2_posit = [1.5*lane_width,dy_c2] # middle of right lane
                     init_c1_vel = 15
@@ -515,7 +544,7 @@ if __name__ == "__main__":
                     #  - result = 1: converged to solution
                     #  - result = 0: failed to converge to solution solution
                     #  - result = -1: trajectory crashed
-
+                    print(result)
                     outcome = 0
                     if result is 1: #Converged to satisfactory solution
                         if c1_mpc_x[1,-1]>c2_mpc_x[1,-1]: outcome = 1
@@ -525,10 +554,10 @@ if __name__ == "__main__":
                     #  - outcome = 1: c1 ended up ahead of c2
                     #  - outcome = 0: no solution was generated
                     #  - outcome = -1: c1 ended up behind c2
-
+                    dynamicPlotter(c1_mpc_x,c2_mpc_x)
                     #####################################################################
                     #Record Results                
-                    exp_file = open("{}-{}.txt".format(exp_name,start_time),"a")
+                    exp_file = open("path".format(exp_name,start_time),"a")
                     exp_file.write("{}\n".format(RESULT_DIVIDER))
                     exp_file.write("Shift: C1: {}\tC2: {}\n".format(dy_c1,dy_c2))
                     #Result: 1 <- converged to solution, -1 <- crash 0 <- no solution

@@ -100,11 +100,27 @@ def makeOptimiser(dt,horizon,veh_width,veh_length,lane_width,speed_limit,accel_r
     safety_params = opti.parameter(2,1)
     opti.set_value(safety_params,[safe_x_radius,safe_y_radius])
 
-    weight = opti.parameter(4,1)
-    opti.set_value(weight,[50,0,50,10])
+    #Optimisation
+    #Minimise trajectory duration for planning car
+    traj_duration_weight = opti.parameter(4,1)
+    opti.set_value(traj_duration_weight,[2,0,1,0])
+    min_traj_duration=sumsqr((x[:, 1:] - dest_state) * traj_duration_weight)
+    # Minimise final distance from objective for planning car
+    final_distance_weight = opti.parameter(4, 1)
+    opti.set_value(final_distance_weight, [2, 0, 1, 0])
+    min_final_dist = sumsqr((x[:, -1] - dest_state) * final_distance_weight)
+    # Minimise Acceleration Magnitude
+    action_weight = opti.parameter(2, 1)
+    opti.set_value(action_weight, [1, 1])
+    min_accel = sumsqr(u * action_weight)
+    # Minimise Jerk
+    jerk_weight = opti.parameter(2, 1)
+    opti.set_value(jerk_weight, [1, 1])
+    min_jerk = sumsqr((u[:, 1:] - u[:, :-1]) * jerk_weight)
+
 
     #opti.minimize(sumsqr((x[:,1:]-dest_state)*weight) + .01*sumsqr(u[1,:])) #Distance to destination
-    opti.minimize(sumsqr((x[:,1:]-dest_state)*weight)) # Distance to destination
+    opti.minimize(min_traj_duration+min_final_dist+min_accel+min_jerk) # Distance to destination
     #opti.minimize(sumsqr(x-goal) + sumsqr(u)) # Distance to destination
     #opti.minimize(sumsqr(x)+sumsqr(u))
 
@@ -113,8 +129,8 @@ def makeOptimiser(dt,horizon,veh_width,veh_length,lane_width,speed_limit,accel_r
         opti.subject_to(x[:,k+1]==F(x[:,k],u[:,k]))
         #safety_constr = sqrt((x[0,k+1]-x_other[0,k+1])**2 + (x[1,k+1]-x_other[1,k+1])**2)
         #opti.subject_to(safety_constr>1)
-        safety_constr = ((x[0,k+1]-x_other[0,k+1])/safety_params[0])**2 + ((x[1,k+1]-x_other[1,k+1])/safety_params[1])**2
-        opti.subject_to(safety_constr>1)
+    safety_constr = ((x[0,k+1]-x_other[0,k+1])/safety_params[0])**2 + ((x[1,k+1]-x_other[1,k+1])/safety_params[1])**2
+    opti.subject_to(safety_constr>=1)
 
     #X-coord constraints
     opti.subject_to(bnd[0]<=x[0,:])
@@ -143,7 +159,7 @@ def makeOptimiser(dt,horizon,veh_width,veh_length,lane_width,speed_limit,accel_r
     ipopt_opts["ipopt.sb"] = "yes";
     ipopt_opts["print_time"] = 0
     #Cap the maximum number of iterations
-    ipopt_opts["ipopt.max_iter"] = 500
+    ipopt_opts["ipopt.max_iter"] = 1500
 
     opti.solver('ipopt',ipopt_opts)
 

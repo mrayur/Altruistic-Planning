@@ -702,7 +702,7 @@ if __name__ == "__main__":
 
     # Plot Resulting Trajectories
 
-    dynamicPlotter(c1_mpc_x,c2_mpc_x)
+    # dynamicPlotter(c1_mpc_x,c2_mpc_x)
     dynamicPlotter(np.array(c1_joint_opt_x),np.array(c2_joint_opt_x))
 
 
