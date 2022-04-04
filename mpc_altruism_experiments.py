@@ -276,14 +276,15 @@ if __name__ == "__main__":
     #Optimiser Parameters
     axle_length = 2.7 # length of car axle
     dt = .2 # timestep size
-    epsilon = .5 # maximum distance from objective for experiment to finish
+    epsilon = .05 # maximum distance from objective for experiment to finish
     lane_width = 4 # width of a lane
     T = 10 #Trajectory length
     lookahead_horizon = 4 # length of time MPC plans over
     N = int(lookahead_horizon/dt)
-    shift_values=[]
+    N = 6
+    shift_values = [x*.25*veh_length for x in range(N+1)]
     speed_limit = 15
-    accel_range = [-3,3]
+    accel_range = [-9,3]
     yaw_rate_range = [-math.pi/180,math.pi/180]    
 
     ###################################
@@ -410,7 +411,7 @@ if __name__ == "__main__":
                     c1_to_global,c2_to_global = False, False
                     c1_mpc_x,c2_mpc_x = np.array(c1_x),np.array(c2_x)
                     c1_mpc_u,c2_mpc_u = np.array(c1_u),np.array(c2_u)
-                    num_timesteps = 4
+                    num_timesteps = 2
 
                     while t<T and (c1_t is None or c2_t is None):
                         ################################
@@ -517,7 +518,7 @@ if __name__ == "__main__":
                     #####################################################################
 
                     exp_file = open('path',"a")
-                    exp_file.write("Exp_Num: {}\tt: {}\tc1_t: {}\tc2_t: {}\n".format(dy_c1,dy_c2,t,c1_t,c2_t))
+                    exp_file.write("dy_c1: {}\tdy_c2: {}\tt: {}\tc1_t: {}\tc2_t: {}\n".format(dy_c1,dy_c2,t,c1_t,c2_t))
                     exp_file.close()
 
 #####################################
